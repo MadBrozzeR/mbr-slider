@@ -1,0 +1,43 @@
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+#container {
+  --shift-abs: max(var(--shift), -1 * var(--shift));
+  --shift-abs-reverse: calc(1 - var(--shift-abs) * 0.1);
+  --shift-perc: calc(var(--shift) * 100%);
+}
+.slide {
+  display: none;
+  width: 100%;
+  height: 100%;
+  background: green;
+  position: absolute;
+  top: 0;
+}
+.slide[data-slide-type="current"] {
+  left: var(--shift-perc);
+  opacity: calc(1 - var(--shift-abs));
+  transform: matrix(var(--shift-abs-reverse), 0, 0, var(--shift-abs-reverse), 0, 0);
+}
+.slide[data-slide-active="0"] {
+  transition: .2s left ease-in-out, .2s opacity ease-in-out, .2s transform ease-in-out;
+}
+.slide[data-slide-type="current"],
+.slide[data-slide-type="next"],
+.slide[data-slide-type="prev"] {
+  display: block;
+}
+
+.slide[data-slide-type="next"] {
+  left: calc(100% + var(--shift-perc) * 0.3);
+}
+
+.slide[data-slide-type="prev"] {
+  left: calc(-100% + var(--shift-perc) * 0.3);
+}
