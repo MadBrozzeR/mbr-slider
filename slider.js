@@ -11,6 +11,7 @@ var DEFAULT_LISTENERS = {
     event.preventDefault();
 
     var relativeShift = this.getRelativeShift(touch);
+
     this.container.style.setProperty('--shift-x', relativeShift.dx);
     this.container.style.setProperty('--shift-y', relativeShift.dy);
   },
@@ -166,5 +167,6 @@ Slider.prototype.emit = function (key, context, argumentList) {
     this.listeners[key].apply(context || this, argumentList);
   }
 }
+Slider.DEFAULT_LISTENERS = DEFAULT_LISTENERS;
 
 export { Slider };
