@@ -5,6 +5,6 @@ window.onload = function () {
 
   var container = document.getElementById('container');
 
-  new Slider(container);
+  new Slider(container).setup({ loop: true });
 }
 

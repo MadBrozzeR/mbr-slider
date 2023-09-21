@@ -1,67 +1,86 @@
-import { Toucher } from './toucher.js';
+var DEFAULT_OPTIONS = {
+  loop: false,
+  threshold: 0.4,
+};
+
+var DEFAULT_LISTENERS = {
+  touchStart: function (event) {
+    this.container.setAttribute('data-slider-active', '1');
+  },
+  touchMove: function (event, touch) {
+    event.preventDefault();
+
+    var relativeShift = this.getRelativeShift(touch);
+    this.container.style.setProperty('--shift-x', relativeShift.dx);
+    this.container.style.setProperty('--shift-y', relativeShift.dy);
+  },
+  touchEnd: function (event, touch) {
+    var relativeShift = this.getRelativeShift(touch);
+
+    this.container.setAttribute('data-slider-active', '0');
+    this.container.style.setProperty('--shift-x', 0);
+    this.container.style.setProperty('--shift-y', 0);
+
+    if (relativeShift.dx > this.options.threshold) {
+      this.setCurrent(this.prev());
+    } else if (relativeShift.dx < -this.options.threshold) {
+      this.setCurrent(this.next());
+    }
+  },
+  typeChange: function (type) {
+    if (type) {
+      this.element.setAttribute('data-slide-type', type);
+    } else {
+      this.element.removeAttribute('data-slide-type');
+    }
+  }
+}
 
 function Slide (element, slider) {
   this.slider = slider;
   this.element = element;
 }
-Slide.prototype.shift = function (value) {
-  var relativeShift = this.slider.getRelativeShift(value);
-  this.element.style.setProperty('--shift', relativeShift);
-}
-Slide.prototype.activate = function (state) {
-  this.element.setAttribute('data-slide-active', state ? '1' : '0');
-}
 Slide.prototype.setType = function (type) {
-  if (type) {
-    this.element.setAttribute('data-slide-type', type);
-  } else {
-    this.element.removeAttribute('data-slide-type');
-  }
+  this.slider.emit('typeChange', this, [type]);
 }
-Slide.prototype.setCurrent = function (value) {
-  this.element.setAttribute('data-slide-current', value ? '1' : '0');
+
+function touchListener (slider) {
+  var touch = { x: 0, y: 0, dx: 0, dy: 0 };
+
+  slider.container.addEventListener('touchstart', function (event) {
+    touch.x = event.changedTouches[0].clientX;
+    touch.y = event.changedTouches[0].clientY;
+
+    slider.emit('touchStart', slider, [event]);
+  });
+
+  slider.container.addEventListener('touchmove', function (event) {
+    touch.dx = event.changedTouches[0].clientX - touch.x;
+    touch.dy = event.changedTouches[0].clientY - touch.y;
+
+    slider.emit('touchMove', slider, [event, touch]);
+  });
+
+  slider.container.addEventListener('touchend', function (event) {
+    slider.emit('touchEnd', slider, [event, touch]);
+  });
 }
 
 function Slider (container) {
   this.container = container;
+  this.options = Object.assign({}, DEFAULT_OPTIONS);
+  this.listeners = Object.assign({}, DEFAULT_LISTENERS);
 
   this.slides = this.getSlides();
   this.setCurrent(0);
 
-  var slider = this;
-
-  Toucher.attach(this.container, {
-    start: function () {
-      var next = slider.next();
-      var prev = slider.prev();
-
-      slider.current().activate(true);
-      next && next.activate(true);
-      prev && prev.activate(true);
-    },
-    move: function (touches, event) {
-      event.preventDefault();
-      slider.shift(touches[0].dx);
-    },
-    end: function (touches) {
-      var next = slider.next();
-      var prev = slider.prev();
-
-      var relativeShift = slider.getRelativeShift(touches[0].dx);
-      slider.current().activate(false);
-      next && next.activate(false);
-      prev && prev.activate(false);
-      if (relativeShift > 0.4) {
-        slider.setCurrent(slider.getPrevIndex());
-      } else if (relativeShift < -0.4) {
-        slider.setCurrent(slider.getNextIndex());
-      }
-      slider.shift(0);
-    }
-  });
+  touchListener(this);
 }
-Slider.prototype.getRelativeShift = function (value) {
-  return value / this.container.clientWidth;
+Slider.prototype.getRelativeShift = function (touch) {
+  return {
+    dx: (touch.dx || 0) / this.container.clientWidth,
+    dy: (touch.dy || 0) / this.container.clientHeight,
+  };
 }
 Slider.prototype.getSlides = function (className) {
   className || (className = 'slide');
@@ -76,8 +95,17 @@ Slider.prototype.getSlides = function (className) {
 
   return result;
 }
+Slider.prototype.push = function (element) {
+  if (element instanceof HTMLElement) {
+    this.slides.push(new Slide(element, this));
+  }
+}
 Slider.prototype.setCurrent = function (index) {
-  if (index === -1) {
+  if (index instanceof Slide) {
+    index = this.slides.indexOf(index);
+  }
+
+  if (index === -1 || index === null) {
     return;
   }
 
@@ -101,14 +129,14 @@ Slider.prototype.setCurrent = function (index) {
 }
 Slider.prototype.getNextIndex = function () {
   if (this.currentIndex >= this.slides.length - 1) {
-    return this.loop ? 0 : -1;
+    return this.options.loop ? 0 : -1;
   }
 
   return this.currentIndex + 1;
 }
 Slider.prototype.getPrevIndex = function () {
   if (this.currentIndex <= 0) {
-    return this.loop ? (this.slides.length - 1) : -1;
+    return this.options.loop ? (this.slides.length - 1) : -1;
   }
 
   return this.currentIndex - 1;
@@ -122,9 +150,21 @@ Slider.prototype.next = function () {
 Slider.prototype.prev = function () {
   return this.slides[this.getPrevIndex()] || null;
 }
-Slider.prototype.shift = function (value) {
-  var relativeShift = this.getRelativeShift(value);
-  this.container.style.setProperty('--shift', relativeShift);
+Slider.prototype.on = function (listeners) {
+  Object.assign(this.listeners, listeners);
+
+  return this;
+}
+Slider.prototype.setup = function (options) {
+  Object.assign(this.options, options);
+  this.setCurrent(this.currentIndex);
+
+  return this;
+}
+Slider.prototype.emit = function (key, context, argumentList) {
+  if (this.listeners[key] instanceof Function) {
+    this.listeners[key].apply(context || this, argumentList);
+  }
 }
 
 export { Slider };

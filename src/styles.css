@@ -8,9 +8,12 @@ html, body {
 }
 
 #container {
-  --shift-abs: max(var(--shift), -1 * var(--shift));
+  --shift-abs: max(var(--shift-x), -1 * var(--shift-x));
   --shift-abs-reverse: calc(1 - var(--shift-abs) * 0.1);
-  --shift-perc: calc(var(--shift) * 100%);
+  --shift-perc: calc(var(--shift-x) * 100%);
+}
+#container[data-slider-active="0"] .slide {
+  transition: .2s left ease-in-out, .2s opacity ease-in-out, .2s transform ease-in-out;
 }
 .slide {
   display: none;
@@ -24,9 +27,6 @@ html, body {
   left: var(--shift-perc);
   opacity: calc(1 - var(--shift-abs));
   transform: matrix(var(--shift-abs-reverse), 0, 0, var(--shift-abs-reverse), 0, 0);
-}
-.slide[data-slide-active="0"] {
-  transition: .2s left ease-in-out, .2s opacity ease-in-out, .2s transform ease-in-out;
 }
 .slide[data-slide-type="current"],
 .slide[data-slide-type="next"],
