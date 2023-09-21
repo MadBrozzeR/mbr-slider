@@ -1,0 +1,22 @@
+{
+  "name": "mbr-slider",
+  "version": "1.0.0",
+  "description": "Touch slider",
+  "main": "slider.js",
+  "directories": {
+    "example": "example"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MadBrozzeR/mbr-slider.git"
+  },
+  "author": "MadBrozzeR",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/MadBrozzeR/mbr-slider/issues"
+  },
+  "homepage": "https://github.com/MadBrozzeR/mbr-slider#readme"
+}
