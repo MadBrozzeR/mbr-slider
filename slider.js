@@ -51,6 +51,7 @@ function touchListener (slider) {
   slider.container.addEventListener('touchstart', function (event) {
     touch.x = event.changedTouches[0].clientX;
     touch.y = event.changedTouches[0].clientY;
+    touch.dx = touch.dy = 0;
 
     slider.emit('touchStart', slider, [event]);
   });
