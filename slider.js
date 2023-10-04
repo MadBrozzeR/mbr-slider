@@ -111,23 +111,27 @@ Slider.prototype.setCurrent = function (index) {
     return;
   }
 
+  var current = this.current();
   var next = this.next();
   var prev = this.prev();
 
-  if (this.current()) {
-    this.current().setType();
+  if (current) {
+    current.setType();
     next && next.setType();
     prev && prev.setType();
   }
 
   this.currentIndex = index % this.slides.length;
 
+  current = this.current();
   next = this.next();
   prev = this.prev();
 
-  this.current().setType('current');
-  next && next.setType('next');
-  prev && prev.setType('prev');
+  if (current) {
+    current.setType('current');
+    next && next.setType('next');
+    prev && prev.setType('prev');
+  }
 }
 Slider.prototype.getNextIndex = function () {
   if (this.currentIndex >= this.slides.length - 1) {
